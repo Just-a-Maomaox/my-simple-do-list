@@ -143,7 +143,7 @@ function Index() {
                   className={"filter-tab" + (filter === name ? " is-active" : "")}
                   onClick={() => setFilter(name)}
                 >
-                  {name[0].toUpperCase() + name.slice(1)}
+                  {name.charAt(0).toUpperCase() + name.slice(1)}
                 </button>
               ))}
             </div>
