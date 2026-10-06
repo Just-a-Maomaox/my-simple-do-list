@@ -44,15 +44,19 @@ function Index() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
 
+  const [loaded, setLoaded] = useState(false);
+
   // On first render, load the tasks saved in localStorage.
   useEffect(() => {
     setTasks(loadTasks());
+    setLoaded(true);
   }, []);
 
-  // Save the tasks to localStorage whenever they change.
+  // Save the tasks to localStorage whenever they change
+  // (only after loading, so we never overwrite saved tasks with an empty list).
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-  }, [tasks]);
+    if (loaded) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  }, [tasks, loaded]);
 
   function addTask(event: React.FormEvent) {
     event.preventDefault();
@@ -80,10 +84,12 @@ function Index() {
   function saveEdit(event: React.FormEvent) {
     event.preventDefault();
     const text = editingText.trim();
-    if (!text) return;
-    setTasks((current) =>
-      current.map((task) => (task.id === editingId ? { ...task, text } : task))
-    );
+    // An empty edit simply cancels, keeping the old text.
+    if (text) {
+      setTasks((current) =>
+        current.map((task) => (task.id === editingId ? { ...task, text } : task))
+      );
+    }
     setEditingId(null);
   }
 
@@ -137,7 +143,7 @@ function Index() {
                   className={"filter-tab" + (filter === name ? " is-active" : "")}
                   onClick={() => setFilter(name)}
                 >
-                  {name[0].toUpperCase() + name.slice(1)}
+                  {name.charAt(0).toUpperCase() + name.slice(1)}
                 </button>
               ))}
             </div>
@@ -169,6 +175,9 @@ function Index() {
                         value={editingText}
                         autoFocus
                         onChange={(event) => setEditingText(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Escape") setEditingId(null);
+                        }}
                         aria-label="Edit task"
                       />
                       <Button type="submit" variant="task" size="task">Save</Button>
